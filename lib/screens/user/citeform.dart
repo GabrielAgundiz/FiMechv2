@@ -31,16 +31,16 @@ class _CiteFormState extends State<CiteForm> {
   TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
 
   static const List<Map<String, String>> _popularServices = [
-    {'name': 'Cambio de aceite', 'time': '30–45 min'},
-    {'name': 'Rotación de llantas', 'time': '30 min'},
-    {'name': 'Revisión de frenos', 'time': '1 hora'},
-    {'name': 'Cambio de batería', 'time': '30 min'},
-    {'name': 'Cambio de filtro de aire', 'time': '15 min'},
-    {'name': 'Afinación general', 'time': '2–3 horas'},
-    {'name': 'Servicio de transmisión', 'time': '2–4 horas'},
-    {'name': 'Cambio de líquido refrigerante', 'time': '1 hora'},
-    {'name': 'Alineación y balanceo', 'time': '1 hora'},
-    {'name': 'Servicio de aire acondicionado', 'time': '1–2 horas'},
+    {'name': 'Cambio de aceite', 'time': '30–45 min', 'cost': '\$300–\$600'},
+    {'name': 'Rotación de llantas', 'time': '30 min', 'cost': '\$150–\$300'},
+    {'name': 'Revisión de frenos', 'time': '1 hora', 'cost': '\$500–\$1,500'},
+    {'name': 'Cambio de batería', 'time': '30 min', 'cost': '\$800–\$2,000'},
+    {'name': 'Cambio de filtro de aire', 'time': '15 min', 'cost': '\$200–\$400'},
+    {'name': 'Afinación general', 'time': '2–3 horas', 'cost': '\$1,000–\$2,500'},
+    {'name': 'Servicio de transmisión', 'time': '2–4 horas', 'cost': '\$1,500–\$4,000'},
+    {'name': 'Cambio de líquido refrigerante', 'time': '1 hora', 'cost': '\$400–\$900'},
+    {'name': 'Alineación y balanceo', 'time': '1 hora', 'cost': '\$300–\$600'},
+    {'name': 'Servicio de aire acondicionado', 'time': '1–2 horas', 'cost': '\$600–\$2,000'},
   ];
 
   @override
@@ -58,12 +58,18 @@ class _CiteFormState extends State<CiteForm> {
   void _showServicesSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: const Color(0xF3FFF8F2),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
-        return Padding(
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.75,
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -91,6 +97,14 @@ class _CiteFormState extends State<CiteForm> {
               ...(_popularServices.map((s) => ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 4),
                     title: Text(s['name']!),
+                    subtitle: Text(
+                      '*${s['cost']!} MXN',
+                      style: TextStyle(
+                        color: Colors.green[700],
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                     trailing: Text(
                       s['time']!,
                       style: TextStyle(color: Colors.grey[600], fontSize: 13),
@@ -100,7 +114,23 @@ class _CiteFormState extends State<CiteForm> {
                       Navigator.of(ctx).pop();
                     },
                   ))),
+              const SizedBox(height: 8),
+              SelectionContainer.disabled(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    '* Los costos son aproximados y pueden variar dependiendo del caso, modelo del vehículo y taller.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ),
             ],
+          ),
+        ),
           ),
         );
       },
@@ -405,9 +435,9 @@ class _CiteFormState extends State<CiteForm> {
                   const Text('Ingresa el día y hora:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   Row(children: [
-                    Expanded(child: TextButton(onPressed: _selectDate, child: Text('Fecha: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'))),
+                    Expanded(child: TextButton(onPressed: _selectDate, child: Text('Fecha: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: TextStyle(color: Colors.green[700], fontSize: 15),))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextButton(onPressed: _selectTime, child: Text('Hora: ${_selectedTime.format(context)}'))),
+                    Expanded(child: TextButton(onPressed: _selectTime, child: Text('Hora: ${_selectedTime.format(context)}', style: TextStyle(color: Colors.green[700], fontSize: 15),))),
                   ]),
 
                   const SizedBox(height: 30),
