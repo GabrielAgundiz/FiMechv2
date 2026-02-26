@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fimech/services/appointment_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -107,47 +108,83 @@ class WhatsappButton extends StatelessWidget {
   }
 }
 
+/// FAB flotante que abre WhatsApp con el taller preferido del usuario.
+/// Obtiene dinámicamente el teléfono desde Firestore.
 class WhatsappButtonPerfil extends StatelessWidget {
   const WhatsappButtonPerfil({super.key});
 
-  void launchWhatsapp({required String number, required String message}) async {
-    final String androidUrl = "whatsapp://send?phone=$number&text=$message";
-    final Uri androidUri = Uri.parse(androidUrl);
+  Future<String?> _fetchWorkshopPhone() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return null;
+    try {
+      final clientDoc = await FirebaseFirestore.instance
+          .collection('client')
+          .doc(user.uid)
+          .get();
+      final workshopId =
+          clientDoc.data()?['preferredWorkshopId'] as String?;
+      if (workshopId == null || workshopId.isEmpty) return null;
+      final adminDoc = await FirebaseFirestore.instance
+          .collection('admin')
+          .doc(workshopId)
+          .get();
+      return adminDoc.data()?['phone'] as String?;
+    } catch (e) {
+      debugPrint('Error obteniendo teléfono del taller: $e');
+      return null;
+    }
+  }
 
-    final String webUrl = "https://api.whatsapp.com/send/?phone=$number&text=$message";
-    final Uri webUri = Uri.parse(webUrl);
-
-    if (await canLaunchUrl(androidUri)) {
-      await launchUrl(androidUri);
-    } else {
-      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+  void _launchWhatsApp(BuildContext context, String rawPhone) async {
+    final normalized = _normalizePhone(rawPhone);
+    if (normalized == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Número de teléfono del taller no válido')),
+      );
+      return;
+    }
+    const message =
+        '¡Hola! Me gustaría obtener información sobre sus servicios.';
+    final encodedMessage = Uri.encodeComponent(message);
+    final androidUri = Uri.parse(
+        'whatsapp://send?phone=$normalized&text=$encodedMessage');
+    final webUri = Uri.parse(
+        'https://api.whatsapp.com/send?phone=$normalized&text=$encodedMessage');
+    try {
+      if (await canLaunchUrl(androidUri)) {
+        await launchUrl(androidUri);
+      } else {
+        await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al abrir WhatsApp: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        child: ElevatedButton(
-          onPressed: () {
-            launchWhatsapp(number: '8110745230', message: "Hola");
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
-            foregroundColor: Colors.white,
-          ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              FaIcon(FontAwesomeIcons.whatsapp),
-              SizedBox(width: 10),
-              Text("Iniciar chat con el Taller"),
-            ],
-          ),
-        ),
-      ),
+    return FutureBuilder<String?>(
+      future: _fetchWorkshopPhone(),
+      builder: (context, snapshot) {
+        final rawPhone = snapshot.data;
+        final normalized = _normalizePhone(rawPhone);
+        final bool isEnabled =
+            snapshot.connectionState == ConnectionState.done &&
+                normalized != null;
+
+        return FloatingActionButton(
+          onPressed:
+              isEnabled ? () => _launchWhatsApp(context, rawPhone!) : null,
+          backgroundColor:
+              isEnabled ? const Color(0xFF25D366) : Colors.grey[400],
+          tooltip: isEnabled
+              ? 'Contactar al Taller por WhatsApp'
+              : 'Taller sin número disponible',
+          child: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
+        );
+      },
     );
   }
 }
