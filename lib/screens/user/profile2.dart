@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:fimech/screens/user/widgets/circularimage.dart';
 import 'package:fimech/screens/user/widgets/profiledata.dart';
 import 'package:fimech/screens/user/widgets/sectionheading.dart';
+import 'package:fimech/screens/user/widgets/whatsappbutton.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -132,7 +133,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
         //      )
         //     ],
       ),
-      //bottomNavigationBar: WhatsappButtonPerfil(),
+      floatingActionButton: const WhatsappButtonPerfil(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
