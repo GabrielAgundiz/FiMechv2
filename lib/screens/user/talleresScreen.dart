@@ -1,9 +1,14 @@
+// Ignore lint: file name is not lower_case_with_underscores
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fimech/screens/user/citeform.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TalleresScreen extends StatefulWidget {
   const TalleresScreen({super.key});
@@ -15,9 +20,61 @@ class _TalleresScreenState extends State<TalleresScreen> {
   final Map<String, String?> _urlCache = {}; // cache docId/raw -> resolved URL or null
   final Map<String, Uint8List?> _bytesCache = {}; // cache url -> bytes or null
 
+  // Try a set of likely keys in the workshop document to find a phone/whatsapp number.
+  String? _extractPhone(Map<String, dynamic> data) {
+    final candidates = [
+      'whatsapp',
+      'workshopPhone',
+      'phone',
+      'phoneNumber',
+      'telefono',
+      'mobile',
+      'contact',
+      'celular',
+    ];
+    for (final k in candidates) {
+      if (data.containsKey(k)) {
+        final v = data[k];
+        if (v is String && v.trim().isNotEmpty) return _sanitizePhone(v);
+        if (v is num) return _sanitizePhone(v.toString());
+      }
+    }
+    return null;
+  }
+
+  // Remove spaces, parentheses, dashes; keep leading + if present (WhatsApp accepts international format without + too).
+  String _sanitizePhone(String raw) {
+    var s = raw.trim();
+    // Remove common separators
+    s = s.replaceAll(RegExp(r'[\s\-()\\]'), '');
+    // If starts with +, remove + because wa.me expects no plus; keep digits and plus only
+    if (s.startsWith('+')) s = s.replaceFirst('+', '');
+    return s;
+  }
+
+  Future<void> _openWhatsApp(String phone, {String? text}) async {
+    try {
+      final encodedText = (text ?? '').isNotEmpty ? '&text=${Uri.encodeComponent(text!)}' : '';
+      final uri1 = Uri.parse('https://wa.me/$phone$encodedText');
+      if (await canLaunchUrl(uri1)) {
+        await launchUrl(uri1, mode: LaunchMode.externalApplication);
+        return;
+      }
+      // fallback to api.whatsapp.com
+      final uri2 = Uri.parse('https://api.whatsapp.com/send?phone=$phone$encodedText');
+      if (await canLaunchUrl(uri2)) {
+        await launchUrl(uri2, mode: LaunchMode.externalApplication);
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo abrir WhatsApp.')));
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No se pudo abrir WhatsApp.')));
+    }
+  }
+
   Future<String?> _resolveImageUrl(dynamic raw, String docId) async {
     try {
-      final key = '${docId}::${raw ?? ''}';
+      final key = '$docId::${raw ?? ''}';
       if (_urlCache.containsKey(key)) return _urlCache[key];
 
       if (raw == null) {
@@ -278,6 +335,7 @@ class _TalleresScreenState extends State<TalleresScreen> {
                             ),
                             maxLines: 1,
                           ),
+                          // Action buttons: Agendar (open form) and Llamar (open WhatsApp)
                           const SizedBox(height: 8),
                           SizedBox(
                             width: double.infinity,
@@ -287,7 +345,7 @@ class _TalleresScreenState extends State<TalleresScreen> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => CiteForm(
-                                      workshopData: {...data, 'id': document.id}, // Pasar los datos del taller e incluir el id
+                                      workshopData: {...data, 'id': document.id},
                                     ),
                                   ),
                                 );
@@ -295,13 +353,35 @@ class _TalleresScreenState extends State<TalleresScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green[300],
                                 foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
-                              child: const Text(
-                                'Agendar',
-                                style: TextStyle(fontSize: 12, color: Colors.black),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Text('Agendar', style: TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                final phone = _extractPhone(data);
+                                if (phone == null || phone.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Número de WhatsApp no disponible para este taller.')));
+                                  return;
+                                }
+                                await _openWhatsApp(phone);
+                              },
+                              icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 16),
+                              label: const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 10),
+                                child: Text('Llamar', style: TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.bold)),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366), // WhatsApp green
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               ),
                             ),
                           ),

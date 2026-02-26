@@ -105,9 +105,7 @@ class _StepState extends State<Step> {
                 child: Stack(children: [
                   Icon(
                     Icons.circle,
-                    color: widget.iconStyle != null
-                        ? widget.iconStyle
-                        : Colors.white,
+                    color: widget.iconStyle ?? Colors.white,
                   ),
                 ]),
                 decoration: BoxDecoration(

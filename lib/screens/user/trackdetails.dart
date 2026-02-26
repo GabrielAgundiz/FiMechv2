@@ -291,7 +291,7 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
     if (diagnostico3 != null && condicion == diagnostico3.progreso2) {
       steps.add(step.Step(
         //shimmer: false,
-        title: 'Vehiculo Diagnosticado : ' + diagnostico3.progreso2,
+        title: 'Vehiculo Diagnosticado : ${diagnostico3.progreso2}',
         iconStyle: iconStyle,
         content: Align(
           alignment: Alignment.centerLeft,
@@ -410,11 +410,11 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
   }
 
   void _openDiagnosticDetails(BuildContext context, Appointment? appointment,
-      Diagnostico? _diagnostico) {
+      Diagnostico? diagnostico) {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => DiagnosticPage(appointment!, _diagnostico!)),
+          builder: (context) => DiagnosticPage(appointment!, diagnostico!)),
     );
   }
 }

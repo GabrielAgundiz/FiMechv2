@@ -57,7 +57,7 @@ class _CompletedTrackingState extends State<CompletedTracking> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                appointments.length > 0
+                appointments.isNotEmpty
                     ? SingleChildScrollView(
                         child: Column(
                           children: appointments.map((appointment) {

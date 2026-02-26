@@ -57,7 +57,7 @@ class _UpcomingScheduleState extends State<UpcomingSchedule> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                appointments.length > 0
+                appointments.isNotEmpty
                     ? SingleChildScrollView(
                         child: Column(
                           children: appointments.map((appointment) {

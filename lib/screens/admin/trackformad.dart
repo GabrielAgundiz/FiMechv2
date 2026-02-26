@@ -28,10 +28,10 @@ class _TrackFormADState extends State<TrackFormAD> {
   //estado de la cita
   final _formKey = GlobalKey<FormState>();
   bool _includeDiagnostic = false;
-  String _progreso = '';
-  String _reason = '';
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
+  final String _progreso = '';
+  final String _reason = '';
+  final DateTime _selectedDate = DateTime.now();
+  final TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
 
   late String userId;
 
@@ -558,7 +558,7 @@ class EmailSender {
 
     try {
       final sendReport = await send(message, gmailSmtp);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     } on MailerException catch (e) {
       print('Message not sent.');
       for (var p in e.problems) {
@@ -577,7 +577,7 @@ class EmailSender {
 
     try {
       final sendReport = await send(message, gmailSmtp);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     } on MailerException catch (e) {
       print('Message not sent.');
       for (var p in e.problems) {
@@ -596,7 +596,7 @@ class EmailSender {
 
     try {
       final sendReport = await send(message, gmailSmtp);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     } on MailerException catch (e) {
       print('Message not sent.');
       for (var p in e.problems) {
@@ -615,7 +615,7 @@ class EmailSender {
 
     try {
       final sendReport = await send(message, gmailSmtp);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     } on MailerException catch (e) {
       print('Message not sent.');
       for (var p in e.problems) {
@@ -634,7 +634,7 @@ class EmailSender {
 
     try {
       final sendReport = await send(message, gmailSmtp);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     } on MailerException catch (e) {
       print('Message not sent.');
       for (var p in e.problems) {

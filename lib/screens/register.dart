@@ -25,7 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final formKey = GlobalKey<FormState>(); // Clave global para el formulario.
   bool obscureText =
       true; // Variable para controlar la visibilidad de la contraseña.
-  bool _isAdmin = false;
+  final bool _isAdmin = false;
   @override
   void dispose() {
     _nameController.dispose(); // Limpia el controlador del nombre.

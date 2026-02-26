@@ -11,7 +11,7 @@ String? _normalizePhone(String? phone) {
   String digits = phone.replaceAll(RegExp(r'\D'), '');
   if (digits.isEmpty) return null;
   if (digits.length == 10) {
-    digits = '52' + digits; // asumir México si 10 dígitos
+    digits = '52$digits'; // asumir México si 10 dígitos
   }
   if (digits.length == 11 && digits.startsWith('0')) {
     digits = digits.substring(1);

@@ -10,7 +10,7 @@ String? _normalizePhone(String? phone) {
   if (digits.isEmpty) return null;
   // Si son 10 dígitos (ej. 8112345678) asumimos México y agregamos 52
   if (digits.length == 10) {
-    digits = '52' + digits;
+    digits = '52$digits';
   }
   // Si comienza con 0 y 11 dígitos, eliminamos el 0
   if (digits.length == 11 && digits.startsWith('0')) {
@@ -62,7 +62,7 @@ class WhatsappButtonAD extends StatelessWidget {
         child: ElevatedButton(
           onPressed: isEnabled
               ? () {
-                  launchWhatsapp(number: normalized!, message: message);
+                  launchWhatsapp(number: normalized, message: message);
                 }
               : null,
           style: ElevatedButton.styleFrom(

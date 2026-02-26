@@ -55,7 +55,7 @@ class _CancelledScheduleState extends State<CancelledSchedule> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                appointments.length > 0
+                appointments.isNotEmpty
                     ? SingleChildScrollView(
                         child: Column(
                           children: appointments.map((appointment) {
