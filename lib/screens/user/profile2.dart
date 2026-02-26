@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:fimech/screens/user/home.dart';
+import 'package:fimech/screens/user/reminders_screen.dart';
 import 'package:fimech/screens/user/widgets/circularimage.dart';
 import 'package:fimech/screens/user/widgets/profiledata.dart';
 import 'package:fimech/screens/user/widgets/sectionheading.dart';
@@ -121,19 +122,16 @@ class _ProfilePage2State extends State<ProfilePage2> {
           'Perfil',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        //   actions: <Widget>[
-        //     IconButton(
-        //        icon: const Icon(Icons.notifications),
-        //       onPressed: () {
-        //          Navigator.push(
-        //           context,
-        //            MaterialPageRoute(builder: (context) => NotifiesPage()),
-        //          );
-        //        },
-        //      )
-        //     ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const RemindersScreen()),
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: const WhatsappButtonPerfil(),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -426,6 +424,10 @@ class _ProfilePage2State extends State<ProfilePage2> {
             ),
           ),
         ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: const WhatsappButtonPerfil(),
       ),
     );
   }

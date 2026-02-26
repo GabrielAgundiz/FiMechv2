@@ -376,7 +376,7 @@ class _TalleresScreenState extends State<TalleresScreen> {
                               icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 16),
                               label: const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 10),
-                                child: Text('Llamar', style: TextStyle(fontSize: 12, color: Colors.black, fontWeight: FontWeight.bold)),
+                                child: Text('Llamar', style: TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold)),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF25D366), // WhatsApp green

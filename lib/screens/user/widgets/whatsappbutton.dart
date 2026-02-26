@@ -174,15 +174,32 @@ class WhatsappButtonPerfil extends StatelessWidget {
             snapshot.connectionState == ConnectionState.done &&
                 normalized != null;
 
-        return FloatingActionButton(
-          onPressed:
-              isEnabled ? () => _launchWhatsApp(context, rawPhone!) : null,
-          backgroundColor:
-              isEnabled ? const Color(0xFF25D366) : Colors.grey[400],
-          tooltip: isEnabled
-              ? 'Contactar al Taller por WhatsApp'
-              : 'Taller sin número disponible',
-          child: const FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
+        return SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed:
+                isEnabled ? () => _launchWhatsApp(context, rawPhone!) : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  isEnabled ? const Color(0xFF25D366) : Colors.grey[400],
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
+                SizedBox(width: 10),
+                Text(
+                  'Llamar a mi taller preferido',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
         );
       },
     );

@@ -24,15 +24,87 @@ class _CiteFormState extends State<CiteForm> {
   String? _selectedWorkshopAddress;
 
   final _formKey = GlobalKey<FormState>();
+  final _reasonController = TextEditingController();
   String _model = '';
   String _reason = '';
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = const TimeOfDay(hour: 8, minute: 0);
 
+  static const List<Map<String, String>> _popularServices = [
+    {'name': 'Cambio de aceite', 'time': '30–45 min'},
+    {'name': 'Rotación de llantas', 'time': '30 min'},
+    {'name': 'Revisión de frenos', 'time': '1 hora'},
+    {'name': 'Cambio de batería', 'time': '30 min'},
+    {'name': 'Cambio de filtro de aire', 'time': '15 min'},
+    {'name': 'Afinación general', 'time': '2–3 horas'},
+    {'name': 'Servicio de transmisión', 'time': '2–4 horas'},
+    {'name': 'Cambio de líquido refrigerante', 'time': '1 hora'},
+    {'name': 'Alineación y balanceo', 'time': '1 hora'},
+    {'name': 'Servicio de aire acondicionado', 'time': '1–2 horas'},
+  ];
+
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  void _showServicesSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xF3FFF8F2),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(left: 4, bottom: 12),
+                    child: Text(
+                      'Servicios populares',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4, bottom: 12),
+                    child: Text(
+                      'Tiempo estimado',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey[600]),
+                    ),
+                  ),
+                ],
+              ),
+              ...(_popularServices.map((s) => ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    title: Text(s['name']!),
+                    trailing: Text(
+                      s['time']!,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    ),
+                    onTap: () {
+                      _reasonController.text = s['name']!;
+                      Navigator.of(ctx).pop();
+                    },
+                  ))),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _init() async {
@@ -280,9 +352,27 @@ class _CiteFormState extends State<CiteForm> {
                   const Text('Ingresa el motivo:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
                   TextFormField(
+                    controller: _reasonController,
                     decoration: const InputDecoration(hintText: 'Motivo de la cita', hintStyle: TextStyle(fontSize: 14)),
                     validator: (value) => (value == null || value.isEmpty) ? 'Por favor, ingrese un motivo' : null,
                     onSaved: (value) => _reason = value!.trim(),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Center(
+                      child: TextButton(
+                        onPressed: _showServicesSheet,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Ver servicios populares',
+                          style: TextStyle(color: Colors.green[700], fontSize: 15),
+                        ),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 24),

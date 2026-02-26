@@ -1,5 +1,6 @@
 import 'package:fimech/screens/login.dart';
 import 'package:fimech/screens/user/home.dart';
+import 'package:fimech/services/reminder_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,16 @@ Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp();
+  try {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final reminderService = ReminderService();
+      await reminderService.init();
+      await reminderService.scheduleReminders(user.uid);
+    }
+  } catch (_) {
+    // Notification scheduling is non-critical; continue to launch the app.
+  }
   runApp(MyApp());
 }
 

@@ -53,6 +53,9 @@ dependencies:
   font_awesome_flutter:
   url_launcher: ^6.2.6
   flutter_launcher_icons: ^0.14.4
+  flutter_local_notifications: ^18.0.0
+  timezone: ^0.9.4
+  flutter_timezone: ^5.0.0
 
 
 dev_dependencies:
