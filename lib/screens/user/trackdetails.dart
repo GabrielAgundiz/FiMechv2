@@ -1,9 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fimech/model/car.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fimech/model/appointment.dart';
 import 'package:fimech/screens/user/diagnostic.dart';
-import 'package:fimech/screens/user/widgets/verticalstepper.dart'
-    as step;
+import 'package:fimech/screens/user/widgets/verticalstepper.dart' as step;
 import 'package:fimech/screens/user/widgets/verticalstepper.dart';
 import 'package:fimech/screens/user/widgets/whatsappbutton.dart';
 import 'package:fimech/services/appointment_service.dart';
@@ -18,6 +19,7 @@ class TrackDetailsPage extends StatefulWidget {
 
 class _TrackDetailsPageState extends State<TrackDetailsPage> {
   List<step.Step> steps = [];
+  late final Future<Car?> _carFuture;
   late Diagnostico elemento1;
   late Diagnostico elemento2;
   late Diagnostico elemento3;
@@ -34,9 +36,22 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
     return cita;
   }
 
+  Future<Car?> _loadCar() async {
+    if (widget._appointment.carId.isEmpty) return null;
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('cars')
+          .doc(widget._appointment.carId)
+          .get();
+      if (doc.exists) return Car.fromJson(doc.id, doc.data()!);
+    } catch (_) {}
+    return null;
+  }
+
   @override
   void initState() {
     super.initState();
+    _carFuture = _loadCar();
     _initializeSteps();
     paso1Cumplido = false;
     paso2Cumplido = false;
@@ -101,10 +116,10 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
             return Scaffold(
               appBar: AppBar(
                 backgroundColor: const Color(0xF3FFF8F2),
-                title: const Text(
-                  'Detalles',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ), // Título de la barra de aplicación
+                title: Text(
+                  "Detalles",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
               bottomNavigationBar: WhatsappButton(
                   widget._appointment.id, widget._appointment.auto),
@@ -122,29 +137,60 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
-                                widget._appointment.auto,
+                                widget._appointment.motivo,
                                 style: const TextStyle(
                                   fontSize: 30,
                                   fontWeight: FontWeight.bold,
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              Text(widget._appointment.motivo),
                             ],
                           ),
                         ),
                       ),
+                      const SizedBox(height: 16),
+                      // ── Vehicle card ──────────────────────────────────
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: FutureBuilder<Car?>(
+                          future: _carFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: CircularProgressIndicator(
+                                      color: Colors.green),
+                                ),
+                              );
+                            }
+                            final car = snapshot.data;
+                            if (car != null) return _VehicleCard(car: car);
+                            return _FallbackVehicleCard(
+                                name: widget._appointment.auto);
+                          },
+                        ),
+                      ),
+
+                      // ── Workshop info ──────────────────────────────────
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 30),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               widget._appointment.workshopName,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 4),
-                            Text(widget._appointment.workshopAddress),
+                            Text(
+                              widget._appointment.workshopAddress,
+                              textAlign: TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
@@ -407,6 +453,216 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
       context,
       MaterialPageRoute(
           builder: (context) => DiagnosticPage(appointment!, diagnostico!)),
+    );
+  }
+}
+
+// ── Vehicle card (full data) ──────────────────────────────────────────────────
+
+class _VehicleCard extends StatelessWidget {
+  final Car car;
+
+  const _VehicleCard({required this.car});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.directions_car,
+                      color: Colors.green[400], size: 28),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${car.brand} ${car.model}',
+                        style: const TextStyle(
+                            fontSize: 17, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        car.year,
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        car.plates,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                    ),
+                    if (car.inService) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.orange[100],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'En servicio',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[800],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            const Divider(height: 1, color: Colors.black12),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.palette_outlined,
+                    label: 'Color',
+                    value: car.color,
+                  ),
+                ),
+                Expanded(
+                  child: _InfoItem(
+                    icon: Icons.pin_outlined,
+                    label: 'Serie',
+                    value: car.serial,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Fallback card when car data is unavailable ────────────────────────────────
+
+class _FallbackVehicleCard extends StatelessWidget {
+  final String name;
+
+  const _FallbackVehicleCard({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.directions_car,
+                  color: Colors.green[400], size: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                name,
+                style:
+                    const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Info item (icon + label + value) ─────────────────────────────────────────
+
+class _InfoItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoItem(
+      {required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.black45),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(fontSize: 11, color: Colors.black45)),
+              Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
