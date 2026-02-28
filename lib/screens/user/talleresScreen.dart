@@ -226,7 +226,7 @@ class _TalleresScreenState extends State<TalleresScreen> {
               crossAxisCount: 2,
               crossAxisSpacing: 10,
               mainAxisSpacing: 5,
-              childAspectRatio: 0.8,
+              childAspectRatio: 0.55,
             ),
             itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {

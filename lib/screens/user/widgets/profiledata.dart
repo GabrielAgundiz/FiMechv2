@@ -19,13 +19,13 @@ class ProfileData extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               flex: 3,
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             Expanded(
@@ -35,6 +35,7 @@ class ProfileData extends StatelessWidget {
                 value,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black54),
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
               ),
             ),
             const SizedBox(width: 8,),

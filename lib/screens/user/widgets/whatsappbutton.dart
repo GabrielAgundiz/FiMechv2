@@ -183,7 +183,7 @@ class WhatsappButtonPerfil extends StatelessWidget {
               backgroundColor:
                   isEnabled ? const Color(0xFF25D366) : Colors.grey[400],
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -194,7 +194,7 @@ class WhatsappButtonPerfil extends StatelessWidget {
                 FaIcon(FontAwesomeIcons.whatsapp, color: Colors.white),
                 SizedBox(width: 10),
                 Text(
-                  'Llamar a mi taller preferido',
+                  'Llamar a mi taller',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ],

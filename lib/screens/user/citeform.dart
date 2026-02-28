@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:fimech/model/car.dart';
 import 'package:fimech/screens/user/home.dart';
 import 'package:fimech/screens/user/widgets/sectionheading.dart';
+import 'package:fimech/services/car_service.dart';
 
 class CiteForm extends StatefulWidget {
   final Map<String, dynamic>? workshopData;
@@ -22,6 +24,18 @@ class _CiteFormState extends State<CiteForm> {
   String? _selectedWorkshopId;
   String? _selectedWorkshopName;
   String? _selectedWorkshopAddress;
+
+  List<Car> _userCars = [];
+  bool _isLoadingCars = false;
+  String? _selectedCarId;
+
+  Car? get _selectedCar {
+    try {
+      return _userCars.firstWhere((c) => c.id == _selectedCarId);
+    } catch (_) {
+      return null;
+    }
+  }
 
   final _formKey = GlobalKey<FormState>();
   final _reasonController = TextEditingController();
@@ -137,12 +151,24 @@ class _CiteFormState extends State<CiteForm> {
     );
   }
 
+  Future<void> _loadUserCars() async {
+    setState(() => _isLoadingCars = true);
+    try {
+      final cars = await CarService().getUserCars(userId);
+      setState(() => _userCars = cars);
+    } catch (_) {
+    } finally {
+      setState(() => _isLoadingCars = false);
+    }
+  }
+
   Future<void> _init() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       userId = user.uid;
       await _loadUserPreferredWorkshop();
       await _loadWorkshops();
+      await _loadUserCars();
       // Aplicar workshopData si viene desde Talleres
       if (widget.workshopData != null && widget.workshopData!['id'] != null) {
         final wid = widget.workshopData!['id'] as String;
@@ -281,6 +307,10 @@ class _CiteFormState extends State<CiteForm> {
     }
     _formKey.currentState!.save();
 
+    final car = _selectedCar;
+    if (car == null) return;
+    _model = '${car.brand} ${car.model} ${car.year}';
+
     final dateTime = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -370,13 +400,82 @@ class _CiteFormState extends State<CiteForm> {
                   const SectionHeading(title: 'Detalles de la cita', showActionButton: false),
                   const SizedBox(height: 30),
 
-                  const Text('Ingresa el modelo de automovil:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text('Selecciona tu vehículo:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 6),
-                  TextFormField(
-                    decoration: const InputDecoration(hintText: 'Modelo del automóvil', hintStyle: TextStyle(fontSize: 14)),
-                    validator: (value) => (value == null || value.isEmpty) ? 'Por favor, ingrese un modelo' : null,
-                    onSaved: (value) => _model = value!.trim(),
-                  ),
+                  if (_isLoadingCars)
+                    const SizedBox(height: 48, child: Center(child: CircularProgressIndicator()))
+                  else if (_userCars.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.orange[700], size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'No tienes vehículos registrados. Agrega uno en la sección "Autos".',
+                              style: TextStyle(fontSize: 13, color: Colors.orange[800]),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    DropdownButtonFormField<String>(
+                      value: _selectedCarId,
+                      decoration: const InputDecoration(
+                        hintText: 'Selecciona un vehículo',
+                        hintStyle: TextStyle(fontSize: 14),
+                      ),
+                      hint: const Text('Selecciona un vehículo', style: TextStyle(fontSize: 14)),
+                      isExpanded: true,
+                      items: _userCars.map((car) => DropdownMenuItem<String>(
+                        value: car.id,
+                        child: Text(
+                          '${car.brand} ${car.model} · ${car.plates}',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )).toList(),
+                      onChanged: (id) => setState(() => _selectedCarId = id),
+                      validator: (id) => (id == null || id.isEmpty) ? 'Selecciona un vehículo' : null,
+                    ),
+                  if (_selectedCar != null) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.directions_car, color: Colors.green[400], size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${_selectedCar!.brand} ${_selectedCar!.model} ${_selectedCar!.year}',
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                                ),
+                                Text(
+                                  'Color: ${_selectedCar!.color}  •  Placas: ${_selectedCar!.plates}',
+                                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 24),
                   const Text('Ingresa el motivo:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),

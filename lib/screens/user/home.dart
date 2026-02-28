@@ -1,3 +1,4 @@
+import 'package:fimech/screens/user/cars.dart';
 import 'package:fimech/screens/user/talleresScreen.dart';
 import 'package:flutter/material.dart';
 //import 'package:fimech/screens/user/chat.dart';
@@ -24,8 +25,9 @@ class _HomePageState extends State<HomePage> {
       // Lista de las pantallas a mostrar
       //   FeedPage(),
       SchedulePage(),
-      TalleresScreen(),
       TrackingPage(),
+      TalleresScreen(),
+      const CarsPage(),
       //ChatPage(),
       ProfilePage2()
     ];
@@ -49,6 +51,7 @@ class _HomePageState extends State<HomePage> {
             selectedIndex = value; // Actualiza el índice seleccionado
           });
         },
+        type: BottomNavigationBarType.fixed,
         elevation: 10, // Sombra del elemento
         selectedItemColor: selectedColor, // Color del elemento seleccionado
         unselectedItemColor:
@@ -62,21 +65,21 @@ class _HomePageState extends State<HomePage> {
           //   label: 'Inicio', // Etiqueta del elemento
           // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month), // Icono del elemento
-            label: 'Citas', // Etiqueta del elemento
+            icon: Icon(Icons.calendar_month),
+            label: 'Citas',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.store), // Icono del elemento
-            label: 'Talleres', // Etiqueta del elemento
+            icon: Icon(Icons.content_paste_search),
+            label: 'Seguimiento',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.content_paste_search), // Icono del elemento
-            label: 'Seguimiento', // Etiqueta del elemento
+            icon: Icon(Icons.store),
+            label: 'Talleres',
           ),
-          //     BottomNavigationBarItem(
-          //      icon: Icon(Icons.message),
-          //      label: 'Mensajes',
-          //     ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.directions_car),
+            label: 'Autos',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Perfil',

@@ -135,27 +135,19 @@ class _TrackDetailsPageState extends State<TrackDetailsPage> {
                         ),
                       ),
                       Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      widget._appointment.workshopName + " :  " ?? 'No disponible',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(widget._appointment.workshopAddress ?? 'No disponible'),
-                                  ],
-                                ),
-                              ),
-
-                            ],
-                          ),
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget._appointment.workshopName,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(widget._appointment.workshopAddress),
+                          ],
                         ),
+                      ),
 
                       if (steps.isEmpty)
                         const Center(child: Text('No hay información'))

@@ -156,7 +156,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
                     if (_loadingWorkshops || _isAdminUser == null) {
                       // Mostrar el valor en un ProfileData mientras se resuelve la carga/rol
                       workshopControl = ProfileData(
-                        title: 'Taller preferido',
+                        title: 'Taller preferido:',
                         value: _loadingWorkshops ? 'Cargando...' : currentWorkshopName,
                         onPressed: () {},
                         icon: Icons.hourglass_top,
@@ -164,7 +164,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
                     } else if (_isAdminUser == true) {
                       // Admin: mostrar en lectura (no permitir cambios)
                       workshopControl = ProfileData(
-                        title: 'Taller preferido',
+                        title: 'Taller preferido:',
                         value: currentWorkshopName,
                         onPressed: () {}, // inactivo para admins
                         icon: Icons.lock,
@@ -172,7 +172,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
                     } else {
                       // Usuario normal: mostrar ProfileData que abre un modal para cambiar
                       workshopControl = ProfileData(
-                        title: 'Taller preferido',
+                        title: 'Taller preferido:',
                         value: currentWorkshopName,
                         onPressed: () async {
                           await _showSelectPreferredWorkshop();
@@ -226,7 +226,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
                           height: 8,
                         ),
                         ProfileData(
-                          title: 'Nombre',
+                          title: 'Nombre:',
                           value: _userData?['name'] ?? 'N/A',
                           onPressed: () async {
                             String? newName;
@@ -285,8 +285,6 @@ class _ProfilePage2State extends State<ProfilePage2> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-
-                              const SizedBox(height: 6),
                               workshopControl,
                             ],
                           ),
@@ -295,6 +293,9 @@ class _ProfilePage2State extends State<ProfilePage2> {
                           height: 16,
                         ),
                         const Divider(),
+                        const SizedBox(
+                          height: 16,
+                        ),
                         const SectionHeading(
                           title: "Informacion Personal",
                           showActionButton: false,

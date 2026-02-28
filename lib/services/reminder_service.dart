@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fimech/model/car.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -97,6 +98,42 @@ class ReminderService {
       } else {
         nextDue = now;
       }
+      reminders.add(ReminderInfo(
+        serviceName: serviceName,
+        lastDone: lastDone,
+        nextDue: nextDue,
+        intervalMonths: months,
+      ));
+    }
+    return reminders;
+  }
+
+  /// Builds reminders for a specific car using its stored service dates.
+  List<ReminderInfo> fetchRemindersForCar(Car car) {
+    final now = DateTime.now();
+
+    final Map<String, DateTime?> carDates = {
+      'Cambio de aceite': car.aceite,
+      'Afinación general': car.afinacion,
+      'Cambio de batería': car.bateria,
+      'Servicio de aire acondicionado': car.clima,
+      'Cambio de filtro de aire': car.filtroAire,
+      'Revisión de frenos': car.frenos,
+      'Cambio de líquido refrigerante': car.refrigerante,
+      'Rotación de llantas': car.rotacion,
+      'Servicio de transmisión': car.transmision,
+    };
+
+    final reminders = <ReminderInfo>[];
+    for (final entry in carDates.entries) {
+      final serviceName = entry.key;
+      final lastDone = entry.value;
+      final months = serviceIntervals[serviceName] ?? 12;
+
+      final nextDue = lastDone != null
+          ? DateTime(lastDone.year, lastDone.month + months, lastDone.day)
+          : now;
+
       reminders.add(ReminderInfo(
         serviceName: serviceName,
         lastDone: lastDone,
