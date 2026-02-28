@@ -6,6 +6,7 @@ import 'package:fimech/model/appointment.dart';
 import 'package:fimech/screens/user/home.dart';
 import 'package:fimech/screens/user/scheduledetails.dart';
 import 'package:fimech/services/appointment_service.dart';
+import 'package:fimech/services/car_service.dart';
 
 class UpcomingSchedule extends StatefulWidget {
   const UpcomingSchedule({super.key});
@@ -176,6 +177,10 @@ class _CardAppointmentState extends State<CardAppointment> {
           .collection('citas')
           .doc(_appointment!.id)
           .update({'status': 'Cancelado'});
+
+      if (_appointment!.carId.isNotEmpty) {
+        await CarService().updateCar(_appointment!.carId, {'inService': false});
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

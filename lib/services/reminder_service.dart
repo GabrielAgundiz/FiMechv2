@@ -122,6 +122,7 @@ class ReminderService {
       'Cambio de líquido refrigerante': car.refrigerante,
       'Rotación de llantas': car.rotacion,
       'Servicio de transmisión': car.transmision,
+      'Alineación y balanceo': car.alineacion,
     };
 
     final reminders = <ReminderInfo>[];

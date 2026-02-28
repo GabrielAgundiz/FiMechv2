@@ -335,9 +335,12 @@ class _CiteFormState extends State<CiteForm> {
       return;
     }
 
+    await CarService().updateCar(_selectedCarId!, {'inService': true});
+
     final appointmentRef = await FirebaseFirestore.instance.collection('citas').add({
       'userId': userId,
       'automovil': _model,
+      'carId': _selectedCarId ?? '',
       'date': dateTime,
       'motivo': _reason,
       'status': 'Pendiente',
@@ -425,6 +428,22 @@ class _CiteFormState extends State<CiteForm> {
                         ],
                       ),
                     )
+                  else if (_userCars.every((c) => c.inService))
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.orange[700], size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Todos tus vehículos están actualmente en servicio.',
+                              style: TextStyle(fontSize: 13, color: Colors.orange[800]),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   else
                     DropdownButtonFormField<String>(
                       value: _selectedCarId,
@@ -434,13 +453,15 @@ class _CiteFormState extends State<CiteForm> {
                       ),
                       hint: const Text('Selecciona un vehículo', style: TextStyle(fontSize: 14)),
                       isExpanded: true,
-                      items: _userCars.map((car) => DropdownMenuItem<String>(
-                        value: car.id,
-                        child: Text(
-                          '${car.brand} ${car.model} · ${car.plates}',
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      )).toList(),
+                      items: _userCars
+                          .where((car) => !car.inService)
+                          .map((car) => DropdownMenuItem<String>(
+                            value: car.id,
+                            child: Text(
+                              '${car.brand} ${car.model} · ${car.plates}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          )).toList(),
                       onChanged: (id) => setState(() => _selectedCarId = id),
                       validator: (id) => (id == null || id.isEmpty) ? 'Selecciona un vehículo' : null,
                     ),

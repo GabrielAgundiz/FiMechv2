@@ -21,6 +21,7 @@ class Car {
   final DateTime? refrigerante;
   final DateTime? rotacion;
   final DateTime? transmision;
+  final DateTime? alineacion;
 
   Car({
     required this.id,
@@ -43,6 +44,7 @@ class Car {
     this.refrigerante,
     this.rotacion,
     this.transmision,
+    this.alineacion,
   });
 
   factory Car.fromJson(String id, Map<String, dynamic> json) {
@@ -73,6 +75,7 @@ class Car {
       refrigerante: toDate(json['refrigerante']),
       rotacion: toDate(json['rotacion']),
       transmision: toDate(json['transmision']),
+      alineacion: toDate(json['alineacion']),
     );
   }
 
@@ -98,6 +101,7 @@ class Car {
         'refrigerante': Timestamp.fromDate(refrigerante!),
       if (rotacion != null) 'rotacion': Timestamp.fromDate(rotacion!),
       if (transmision != null) 'transmision': Timestamp.fromDate(transmision!),
+      if (alineacion != null) 'alineacion': Timestamp.fromDate(alineacion!),
     };
   }
 }

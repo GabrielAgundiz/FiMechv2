@@ -16,6 +16,7 @@ class Appointment {
   final String idMecanico;
   final String workshopName;
   final String workshopAddress;
+  final String carId;
 
   Appointment(
       this.id,
@@ -32,7 +33,8 @@ class Appointment {
       this.userId,
       this.idMecanico,
       this.workshopName,
-      this.workshopAddress);
+      this.workshopAddress,
+      this.carId);
 
   factory Appointment.fromJson(String id, Map<String, dynamic> json) {
     return Appointment(
@@ -51,6 +53,7 @@ class Appointment {
       json['idMecanico'] as String,
       json['workshopName'] as String,
       json['workshopAddress'] as String,
+      (json['carId'] as String?) ?? '',
     );
   }
   toJson() {

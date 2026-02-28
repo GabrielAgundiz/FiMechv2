@@ -422,7 +422,7 @@ class _ProfilePage2State extends State<ProfilePage2> {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 const WhatsappButtonPerfil(),
                 const SizedBox(height: 10),
                 SizedBox(

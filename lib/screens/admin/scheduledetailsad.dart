@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
+import 'package:fimech/services/car_service.dart';
 
 class ScheduleDetailsPageAD extends StatefulWidget {
   final Appointment _appointment;
@@ -200,6 +201,11 @@ class _ScheduleDetailsPageADState extends State<ScheduleDetailsPageAD> {
         'status2': newStatus,
         'date_update': DateTime.now(),
       });
+
+      if ((newStatus == 'Cancelado' || newStatus == 'Completado') &&
+          widget._appointment.carId.isNotEmpty) {
+        await CarService().updateCar(widget._appointment.carId, {'inService': false});
+      }
 
       setState(() {
         _currentStatus = newStatus;

@@ -8,6 +8,7 @@ import 'package:mailer/smtp_server/gmail.dart';
 import 'package:fimech/model/appointment.dart';
 import 'package:fimech/screens/admin/homead.dart';
 import 'package:fimech/screens/user/widgets/sectionheading.dart';
+import 'package:fimech/services/car_service.dart';
 
 class TrackFormAD extends StatefulWidget {
   final Appointment _appointment;
@@ -236,6 +237,18 @@ class _TrackFormADState extends State<TrackFormAD> {
       'reason': _reasonController.text,
       'status': 'Completado',
     }, SetOptions(merge: true));
+    // Update car: service date + inService = false
+    final carId = widget._appointment.carId;
+    final motivo = widget._appointment.motivo;
+    if (carId.isNotEmpty) {
+      final field = CarService.serviceToCar[motivo];
+      final Map<String, dynamic> carUpdate = {'inService': false};
+      if (field != null) {
+        carUpdate[field] = Timestamp.fromDate(dateTime);
+      }
+      await CarService().updateCar(carId, carUpdate);
+    }
+
     // Obtener el email del usuario
     String userEmail = await getUserEmail(widget._appointment.userId);
     EmailSender.sendMailFromGmailCompletado(userEmail);
