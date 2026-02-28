@@ -211,6 +211,26 @@ class _ScheduleDetailsPageADState extends State<ScheduleDetailsPageAD> {
         _currentStatus = newStatus;
       });
 
+      // Enviar email al usuario según el nuevo estado
+      String? userEmail = await getUserEmail(widget._appointment.userId);
+      if (userEmail != null && userEmail.isNotEmpty) {
+        if (newStatus == 'Completado') {
+          await _sendStatusEmail(
+            userEmail,
+            'Servicio completado',
+            'El servicio de tu vehículo <b>${widget._appointment.auto}</b> ha sido completado. '
+                'Por favor pasa a recogerlo al taller.',
+          );
+        } else if (newStatus == 'Cancelado') {
+          await _sendStatusEmail(
+            userEmail,
+            'Cita cancelada',
+            'Tu cita para <b>${widget._appointment.auto}</b> ha sido cancelada. '
+                'Puedes agendar una nueva cita desde la aplicación.',
+          );
+        }
+      }
+
       // Mostrar snackbar con color según estado
       Color bg = Colors.blueGrey;
       if (newStatus == 'Completado') bg = Colors.green;
@@ -227,6 +247,30 @@ class _ScheduleDetailsPageADState extends State<ScheduleDetailsPageAD> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al actualizar estado: $e')),
       );
+    }
+  }
+
+  // Envía un correo al usuario informando el cambio de estado de su cita
+  Future<void> _sendStatusEmail(String userEmail, String heading, String bodyHtml) async {
+    try {
+      final smtpServer = gmail(dotenv.env['GMAIL_EMAIL']!, dotenv.env['GMAIL_PASSWORD']!);
+      final message = Message()
+        ..from = Address(dotenv.env['GMAIL_EMAIL']!, 'MechanicTracking')
+        ..recipients.add(userEmail)
+        ..subject = 'Actualización de estado de tu cita'
+        ..html =
+            '<body style="text-align: center; font-family: Tahoma, Geneva, Verdana, sans-serif;">'
+            '<div style="margin:auto; border-radius: 10px; width: 300px; padding: 10px; '
+            'box-shadow: 1px 1px 1px 1px rgb(174, 174, 174);">'
+            '<h2>$heading</h2>'
+            '<p>$bodyHtml</p>'
+            '</div></body>';
+
+      await send(message, smtpServer);
+    } on MailerException catch (e) {
+      print('Error sending status email: $e');
+    } catch (e) {
+      print('Unknown error sending status email: $e');
     }
   }
 
