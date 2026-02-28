@@ -219,19 +219,42 @@ class _CardAppointmentState extends State<CardAppointment> {
           ),
           child: Column(
             children: [
-              ListTile(
-                title: Text(
-                  _appointment!.auto, //signo porque puede ser nulo
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(Icons.directions_car, color: Colors.green[400], size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _appointment!.auto,
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            _appointment!.motivo,
+                            style: const TextStyle(color: Colors.black54, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                subtitle: Text(_appointment!.motivo),
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 15),
-                child: Divider(
-                  thickness: 1,
-                  height: 20,
-                ),
+                child: Divider(thickness: 1, height: 20),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
