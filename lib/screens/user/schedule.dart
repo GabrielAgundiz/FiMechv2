@@ -1,11 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:fimech/screens/login.dart';
 import 'package:fimech/screens/user/citeform.dart';
 import 'package:fimech/screens/user/widgets/cancelled.dart';
 import 'package:fimech/screens/user/widgets/completed.dart';
 import 'package:fimech/screens/user/widgets/upcoming.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fimech/router.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -68,26 +65,7 @@ class _SchedulePageState extends State<SchedulePage> with RouteAware {
                 },
               )
             : null,
-        actions: <Widget>[
-          // Verifica si el usuario está autenticado
-          if (FirebaseAuth.instance.currentUser != null)
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () async {
-                // Eliminar sesión guardada y cerrar sesión de Firebase
-                try {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('saved_uid');
-                  await prefs.remove('saved_isAdmin');
-                } catch (_) {}
-                await FirebaseAuth.instance.signOut();
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-            ),
-        ], // Título de la barra de aplicación
+        // Título de la barra de aplicación
       ),
       body: SafeArea(
         child: SingleChildScrollView(

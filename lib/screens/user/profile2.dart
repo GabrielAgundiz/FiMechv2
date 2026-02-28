@@ -3,8 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-// import 'package:fimech/screens/user/home.dart';
+import 'package:fimech/screens/login.dart';
 import 'package:fimech/screens/user/reminders_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fimech/screens/user/widgets/circularimage.dart';
 import 'package:fimech/screens/user/widgets/profiledata.dart';
 import 'package:fimech/screens/user/widgets/sectionheading.dart';
@@ -421,14 +422,45 @@ class _ProfilePage2State extends State<ProfilePage2> {
                     );
                   },
                 ),
+                const SizedBox(height: 24),
+                const WhatsappButtonPerfil(),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      try {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.remove('saved_uid');
+                        await prefs.remove('saved_isAdmin');
+                      } catch (_) {}
+                      await FirebaseAuth.instance.signOut();
+                      if (context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => LoginPage()),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cerrar sesión',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-        child: const WhatsappButtonPerfil(),
       ),
     );
   }
