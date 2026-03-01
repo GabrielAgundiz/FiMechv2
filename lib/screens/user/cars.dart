@@ -102,12 +102,21 @@ class _CarsPageState extends State<CarsPage> with RouteAware {
   }
 
   Future<void> _onTransfer(Car car) async {
-    final transferred = await showDialog<bool>(
+    final sent = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => _TransferCarDialog(car: car, carService: _carService),
     );
-    if (transferred == true) _loadCars();
+    if (sent == true && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Solicitud de transferencia enviada. El destinatario deberá confirmarla.',
+          ),
+          backgroundColor: Colors.green[400],
+        ),
+      );
+    }
   }
 
   @override
@@ -489,18 +498,34 @@ class _TransferCarDialogState extends State<_TransferCarDialog> {
   Future<void> _confirmTransfer() async {
     if (_foundUserId == null) return;
     setState(() => _isTransferring = true);
+
     try {
-      await widget.carService.transferCar(
-        widget.car.id,
-        _foundUserId!,
-        _foundUserName!,
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return;
+
+      final userDoc = await FirebaseFirestore.instance
+          .collection('client')
+          .doc(currentUser.uid)
+          .get();
+      final fromUserName =
+          (userDoc.data()?['name'] as String?)?.trim() ?? 'Usuario';
+
+      await widget.carService.createPendingTransfer(
+        carId: widget.car.id,
+        carBrand: widget.car.brand,
+        carModel: widget.car.model,
+        carPlates: widget.car.plates,
+        fromUserId: currentUser.uid,
+        fromUserName: fromUserName,
+        toUserId: _foundUserId!,
+        toUserName: _foundUserName!,
       );
       if (mounted) Navigator.of(context).pop(true);
     } catch (_) {
       if (mounted) {
         setState(() {
           _isTransferring = false;
-          _errorMessage = 'Ocurrió un error al transferir el vehículo.';
+          _errorMessage = 'Ocurrió un error al enviar la solicitud.';
         });
       }
     }
@@ -663,7 +688,7 @@ class _TransferCarDialogState extends State<_TransferCarDialog> {
             ),
             child: _isTransferring
                 ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Confirmar transferencia'),
+                : const Text('Enviar solicitud'),
           ),
       ],
     );

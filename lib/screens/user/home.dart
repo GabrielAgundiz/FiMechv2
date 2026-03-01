@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fimech/screens/user/cars.dart';
 import 'package:fimech/screens/user/talleresScreen.dart';
+import 'package:fimech/services/car_service.dart';
 import 'package:fimech/services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _startListeners();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkStartupDialogs());
   }
 
   @override
@@ -124,6 +126,38 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _checkStartupDialogs() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null || !mounted) return;
+
+    final carService = CarService();
+
+    // Show any unread in-app alerts first.
+    final alerts = await carService.getUnreadAlerts(userId);
+    for (final alert in alerts) {
+      if (!mounted) return;
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => _UserAlertDialog(alert: alert, carService: carService),
+      );
+    }
+
+    // Then handle pending car transfers addressed to this user.
+    final transfers = await carService.getPendingTransfersForUser(userId);
+    for (final transfer in transfers) {
+      if (!mounted) return;
+      await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => _TransferConfirmationDialog(
+          transfer: transfer,
+          carService: carService,
+        ),
+      );
+    }
+  }
+
   void _notifyStatusChange(String auto, String status2) {
     final messages = {
       'Aceptado': 'Tu cita fue aceptada por el taller.',
@@ -196,6 +230,277 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Transfer Confirmation Dialog ────────────────────────────────────────────
+
+class _TransferConfirmationDialog extends StatefulWidget {
+  final Map<String, dynamic> transfer;
+  final CarService carService;
+
+  const _TransferConfirmationDialog({
+    required this.transfer,
+    required this.carService,
+  });
+
+  @override
+  State<_TransferConfirmationDialog> createState() =>
+      _TransferConfirmationDialogState();
+}
+
+class _TransferConfirmationDialogState
+    extends State<_TransferConfirmationDialog> {
+  int _countdown = 10;
+  Timer? _timer;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      if (_countdown > 0) {
+        setState(() => _countdown--);
+      } else {
+        _timer?.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    setState(() => _isLoading = true);
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser!;
+      final userDoc = await FirebaseFirestore.instance
+          .collection('client')
+          .doc(currentUser.uid)
+          .get();
+      final toUserName =
+          (userDoc.data()?['name'] as String?)?.trim() ?? 'Usuario';
+
+      await widget.carService.confirmTransfer(
+        widget.transfer['id'] as String,
+        widget.transfer['carId'] as String,
+        currentUser.uid,
+        toUserName,
+      );
+      if (mounted) Navigator.of(context).pop(true);
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _cancel() async {
+    setState(() => _isLoading = true);
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser!;
+      final userDoc = await FirebaseFirestore.instance
+          .collection('client')
+          .doc(currentUser.uid)
+          .get();
+      final toUserName =
+          (userDoc.data()?['name'] as String?)?.trim() ?? 'Usuario';
+
+      await widget.carService.cancelTransfer(
+        widget.transfer['id'] as String,
+        widget.transfer['fromUserId'] as String,
+        widget.transfer['carBrand'] as String? ?? '',
+        widget.transfer['carModel'] as String? ?? '',
+        toUserName,
+      );
+      if (mounted) Navigator.of(context).pop(false);
+    } catch (_) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final carBrand = widget.transfer['carBrand'] as String? ?? '';
+    final carModel = widget.transfer['carModel'] as String? ?? '';
+    final carPlates = widget.transfer['carPlates'] as String? ?? '';
+    final fromUserName = widget.transfer['fromUserName'] as String? ?? '';
+    final canAct = _countdown == 0 && !_isLoading;
+
+    return AlertDialog(
+      backgroundColor: const Color(0xF3FFF8F2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      title: Row(
+        children: [
+          Icon(Icons.swap_horiz, color: Colors.green[400]),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Transferencia recibida',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Car info chip
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.directions_car,
+                      color: Colors.green[400], size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$carBrand $carModel',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        Text(
+                          carPlates,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.green[700]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text.rich(
+              TextSpan(
+                style: const TextStyle(fontSize: 13, color: Colors.black87),
+                children: [
+                  const TextSpan(text: 'El usuario '),
+                  TextSpan(
+                    text: fromUserName,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const TextSpan(
+                    text:
+                        ' desea transferirte este vehículo.\n\nSi aceptas, el vehículo y sus citas quedarán vinculados a tu cuenta. Si rechazas, permanecerán con el dueño actual.',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (_countdown > 0)
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      '$_countdown',
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[400],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Lee el mensaje antes de responder',
+                      style:
+                          TextStyle(fontSize: 12, color: Colors.black45),
+                    ),
+                  ],
+                ),
+              ),
+            if (_isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.only(top: 8),
+                  child: CircularProgressIndicator(color: Colors.green),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: canAct ? _cancel : null,
+          style: TextButton.styleFrom(foregroundColor: Colors.red[400]),
+          child: const Text('Rechazar'),
+        ),
+        ElevatedButton(
+          onPressed: canAct ? _confirm : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green[300],
+            foregroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: const Text('Aceptar'),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── User Alert Dialog ────────────────────────────────────────────────────────
+
+class _UserAlertDialog extends StatelessWidget {
+  final Map<String, dynamic> alert;
+  final CarService carService;
+
+  const _UserAlertDialog({required this.alert, required this.carService});
+
+  @override
+  Widget build(BuildContext context) {
+    final title = alert['title'] as String? ?? 'Notificación';
+    final message = alert['message'] as String? ?? '';
+    final alertId = alert['id'] as String;
+
+    return AlertDialog(
+      backgroundColor: const Color(0xF3FFF8F2),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      title: Row(
+        children: [
+          Icon(Icons.notifications_outlined, color: Colors.orange[600]),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      content: Text(message, style: const TextStyle(fontSize: 14)),
+      actions: [
+        ElevatedButton(
+          onPressed: () async {
+            await carService.markAlertRead(alertId);
+            if (context.mounted) Navigator.of(context).pop();
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green[300],
+            foregroundColor: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            elevation: 0,
+          ),
+          child: const Text('Entendido'),
+        ),
+      ],
     );
   }
 }
